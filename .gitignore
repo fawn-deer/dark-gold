@@ -102,3 +102,7 @@ venv.bak/
 .mypy_cache/
 
 .idea/
+
+# django migrations
+/app/*/migrations/*.py
+!/app/*/migrations/__init__.py
