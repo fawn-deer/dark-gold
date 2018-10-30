@@ -36,3 +36,13 @@ class RealUserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = RealUser
         fields = ('username', 'password')
+
+
+class RealUserChangePasswordSerializer(serializers.ModelSerializer):
+    """
+    更改密码
+    """
+
+    class Meta:
+        model = RealUser
+        fields = ('password',)

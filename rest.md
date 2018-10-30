@@ -14,6 +14,8 @@
 
     PATCH /account/user/<int:id>/ 更新账户信息（部分）
 
+    POST /account/user/<int:id>/change-password/ 更改密码
+
 
 ### 管理员
 

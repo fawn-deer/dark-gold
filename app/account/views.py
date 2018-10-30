@@ -1,11 +1,14 @@
 from django.contrib.auth.hashers import make_password
 from django.db.models import Q
-from rest_framework import generics, mixins, viewsets
+from rest_framework import generics, mixins, viewsets, status
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, AllowAny
+from rest_framework.permissions import IsAdminUser, AllowAny, IsAuthenticated
+from rest_framework.response import Response
 
 from app.account.models import RealUser
-from app.account.serializers import RealUserIdListSerializer, RealUserDetailSerializer, RealUserCreateSerializer
+from app.account.serializers import RealUserIdListSerializer, RealUserDetailSerializer, RealUserCreateSerializer, \
+    RealUserChangePasswordSerializer
 
 
 class RealUserViewSets(mixins.RetrieveModelMixin,
@@ -16,6 +19,33 @@ class RealUserViewSets(mixins.RetrieveModelMixin,
     """
     queryset = RealUser.objects.all()
     serializer_class = RealUserDetailSerializer
+
+    @action(
+        methods=['POST'],
+        detail=True,
+        url_path='change-password',
+        url_name='change_password',
+        serializer_class=RealUserChangePasswordSerializer
+    )
+    def change_password(self, request, pk=None):
+        """
+        更改密码
+        :param request:
+        :param pk:
+        :return:
+        """
+        user = self.get_object()
+        if request.user.is_superuser or request.user.pk == pk:
+            serializer = RealUserChangePasswordSerializer(data=request.data)
+            if serializer.is_valid():
+                user.set_password(serializer.data['password'])
+                user.save()
+                return Response({'status': 'password set'})
+            else:
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
 
 class CreateRealUser(mixins.CreateModelMixin,
