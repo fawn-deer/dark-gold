@@ -6,11 +6,9 @@ from app.account import views
 
 router = routers.SimpleRouter()
 router.register('user', views.RealUserViewSets)
-router.register('delete-user', views.DeleteRealUser, base_name='delete-user')
-
+router.register('department', views.DepartmentViewSets)
 urlpatterns = [
     path('', include(router.urls)),
-    path('create-user/', views.CreateRealUser.as_view({'post': 'create'})),
 
     # 获取账户ID列表
     path('id-list/', views.RealUserIdList.as_view()),

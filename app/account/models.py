@@ -38,11 +38,6 @@ class Department(models.Model):
     def __str__(self):
         return self.name
 
-    # 自定义验证
-    def clean(self):
-        if self.director not in [i.user for i in self.realuser_set.all()]:
-            raise ValidationError('部门主管必须属于该部门')
-
 
 # 扩展User属性
 class RealUser(AbstractUser):
@@ -70,5 +65,3 @@ class RealUser(AbstractUser):
             str(self.get_username()),
             str(self.get_full_name())
         ])
-
-

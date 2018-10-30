@@ -6,7 +6,7 @@
 
     POST /account/logout/ 登出
 
-    POST /account/create-user/ 注册
+    POST /account/user/ 注册
 
     GET /account/user/<int:id>/ 获取账户信息
 
@@ -23,4 +23,20 @@
 
     GET /account/detail/<int:id1>/<int:id2>/ 获取id1至id2之间的全部账户信息
 
-    DELETE /account/delete-user/<int:id>/ 删除账户
+    DELETE /account/user/<int:id>/ 删除账户
+
+
+## 部门
+
+    GET /account/department/<int:id>/ 获取部门信息
+
+
+### 管理员
+
+    POST /account/department/ 添加部门
+
+    PUT /account/department/<int:id>/ 更新部门信息（全部）
+
+    PATCH /account/department/<int:id>/ 更新部门信息（部分）
+
+    DELETE /account/department/<int:id>/ 删除部门

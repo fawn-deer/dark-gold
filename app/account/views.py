@@ -6,26 +6,57 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from app.account.models import RealUser
+from app.account.models import RealUser, Department
 from app.account.serializers import RealUserIdListSerializer, RealUserDetailSerializer, RealUserCreateSerializer, \
-    RealUserChangePasswordSerializer
+    RealUserChangePasswordSerializer, DepartmentSerializer
 
 
 class RealUserViewSets(mixins.RetrieveModelMixin,
+                       mixins.CreateModelMixin,
                        mixins.UpdateModelMixin,
+                       mixins.DestroyModelMixin,
                        viewsets.GenericViewSet):
     """
-    账户视图集，查看、修改账号信息，仅限登录普通用户
+    账户视图集
     """
     queryset = RealUser.objects.all()
-    serializer_class = RealUserDetailSerializer
+
+    def get_permissions(self):
+        permission_classes = []
+        if self.action in ['list',
+                           'retrieve',
+                           'update',
+                           'change_password']:
+            permission_classes = [IsAuthenticated]
+        elif self.action in ['create']:
+            permission_classes = [AllowAny]
+        elif self.action in ['destroy']:
+            permission_classes = [IsAdminUser]
+        return [permission() for permission in permission_classes]
+
+    def get_serializer_class(self):
+        if self.action in ['create']:
+            serializer_class = RealUserCreateSerializer
+        elif self.action in ['change_password']:
+            serializer_class = RealUserChangePasswordSerializer
+        else:
+            serializer_class = RealUserDetailSerializer
+        return serializer_class
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        instance.password = make_password(instance.password)
+        instance.save()
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
 
     @action(
         methods=['POST'],
         detail=True,
         url_path='change-password',
         url_name='change_password',
-        serializer_class=RealUserChangePasswordSerializer
     )
     def change_password(self, request, pk=None):
         """
@@ -35,6 +66,7 @@ class RealUserViewSets(mixins.RetrieveModelMixin,
         :return:
         """
         user = self.get_object()
+        # 非管理员或登录账户，无法更改其他账户密码
         if request.user.is_superuser or request.user.pk == pk:
             serializer = RealUserChangePasswordSerializer(data=request.data)
             if serializer.is_valid():
@@ -48,37 +80,11 @@ class RealUserViewSets(mixins.RetrieveModelMixin,
             return Response(status=status.HTTP_403_FORBIDDEN)
 
 
-class CreateRealUser(mixins.CreateModelMixin,
-                     viewsets.GenericViewSet):
+# 通用分页设置
+class CurrencyResultsSetPagination(PageNumberPagination):
     """
-    注册，任何人均可注册
+    通用分页设置，每页10条，最大10000页
     """
-    queryset = RealUser.objects.all()
-    serializer_class = RealUserCreateSerializer
-    permission_classes = (AllowAny,)
-
-    def perform_create(self, serializer):
-        instance = serializer.save()
-        instance.password = make_password(instance.password)
-        instance.save()
-
-
-class DeleteRealUser(mixins.DestroyModelMixin,
-                     viewsets.GenericViewSet):
-    """
-    删除账户，仅限管理员
-    """
-    queryset = RealUser.objects.all()
-    serializer_class = RealUserDetailSerializer
-    permission_classes = (IsAdminUser,)
-
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save()
-
-
-# 获取账户信息分页设置
-class RealUserIdResultsSetPagination(PageNumberPagination):
     page_size = 10
     max_page_size = 10000
 
@@ -91,7 +97,7 @@ class RealUserIdList(mixins.ListModelMixin,
     """
     queryset = RealUser.objects.all().order_by('id')
     serializer_class = RealUserIdListSerializer
-    pagination_class = RealUserIdResultsSetPagination
+    pagination_class = CurrencyResultsSetPagination
     permission_classes = (IsAdminUser,)
 
     def get(self, request, *args, **kwargs):
@@ -105,7 +111,7 @@ class RealUserDetailId1AndId2List(mixins.ListModelMixin,
     获取id1到id2之间的全部账户信息
     """
     serializer_class = RealUserDetailSerializer
-    pagination_class = RealUserIdResultsSetPagination
+    pagination_class = CurrencyResultsSetPagination
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
@@ -125,3 +131,34 @@ class RealUserDetailId1AndId2List(mixins.ListModelMixin,
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
+
+class DepartmentViewSets(viewsets.ModelViewSet):
+    """
+    部门视图集
+    """
+    queryset = Department.objects.all()
+    pagination_class = CurrencyResultsSetPagination
+
+    def get_permissions(self):
+        """
+        普通用户只允许查看，管理员可以添加更新删除
+        """
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminUser]
+        return [permission() for permission in permission_classes]
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            serializer_class = DepartmentSerializer
+            serializer_class.read_only = True
+        else:
+            serializer_class = DepartmentSerializer
+        return serializer_class
+
+    def perform_destroy(self, instance):
+        users = RealUser.objects.filter(department=instance.id)
+        users.update(department=None)
+        instance.delete()

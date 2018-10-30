@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from app.account.models import RealUser
+from app.account.models import RealUser, Department
 
 
 class RealUserIdListSerializer(serializers.ModelSerializer):
@@ -46,3 +46,18 @@ class RealUserChangePasswordSerializer(serializers.ModelSerializer):
     class Meta:
         model = RealUser
         fields = ('password',)
+
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    """
+    部门信息
+    """
+
+    def validate(self, data):
+        if data['director'] and data['director'] not in [i for i in self.instance.department_name.all()]:
+            raise serializers.ValidationError('部门主管必须属于该部门')
+        return data
+
+    class Meta:
+        model = Department
+        fields = '__all__'
