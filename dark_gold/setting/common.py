@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/2.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
-
+import datetime
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -110,3 +110,26 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
+
+# User
+AUTH_USER_MODEL = 'account.RealUser'
+
+# django rest framework
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+
+# jwt
+JWT_AUTH = {
+    # token过期时间 一星期
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=1 * 60 * 60 * 24 * 7),
+    # 原始token可刷新获得子孙token时间 三个月
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(seconds=1 * 60 * 60 * 24 * 30 * 3)
+}

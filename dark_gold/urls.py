@@ -16,12 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from app.account.urls import account_router
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     # django rest framework
     # 账号系统
-    path('account/', include(account_router.urls)),
-    # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('account/', include('app.account.urls')),
 ]

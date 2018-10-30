@@ -1,8 +1,6 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 HIGHEST_EDUCATION = (
     ('primary_school', '小学'),
@@ -33,7 +31,8 @@ class Department(models.Model):
 
     name = models.CharField('''部门名称''', max_length=100, blank=False, null=False, db_index=True)
     '''部门名称'''
-    director = models.ForeignKey(User, verbose_name='部门主管', on_delete=models.SET_NULL, null=True, blank=True)
+    director = models.ForeignKey('RealUser', verbose_name='部门主管', on_delete=models.SET_NULL, null=True, blank=True,
+                                 related_name='director_user')
     '''部门主管'''
 
     def __str__(self):
@@ -46,12 +45,10 @@ class Department(models.Model):
 
 
 # 扩展User属性
-class RealUser(models.Model):
+class RealUser(AbstractUser):
     """
     扩展User属性
     """
-    original_user = models.OneToOneField(User, on_delete=models.CASCADE, null=False, blank=False)
-    '''Django默认用户'''
     id_number = models.CharField('''身份证号''', max_length=50, null=True, blank=True)
     '''身份证号'''
     sex = models.CharField('''性别''', choices=SEX_CHOICES, default='', null=True, blank=True, max_length=5)
@@ -60,7 +57,8 @@ class RealUser(models.Model):
     '''手机号'''
     highest_education = models.CharField('''最高学历''', choices=HIGHEST_EDUCATION, default='', max_length=20)
     '''最高学历'''
-    department = models.ForeignKey(Department, verbose_name='部门', on_delete=models.SET_NULL, null=True, blank=True)
+    department = models.ForeignKey(Department, verbose_name='部门', on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='department_name')
     '''部门'''
     entry_date = models.DateField('''入职日期''', default=None, null=True, blank=True)
     '''入职日期'''
@@ -69,17 +67,8 @@ class RealUser(models.Model):
 
     def __str__(self):
         return ' '.join([
-            str(self.original_user.get_username()),
-            str(self.original_user.get_full_name())
+            str(self.get_username()),
+            str(self.get_full_name())
         ])
 
 
-@receiver(post_save, sender=User)
-def create_user_real_user(sender, instance, created, **kwargs):
-    if created:
-        RealUser.objects.create(original_user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_real_user(sender, instance, **kwargs):
-    instance.realuser.save()
