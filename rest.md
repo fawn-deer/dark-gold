@@ -19,9 +19,9 @@
 
 ### 管理员
 
-    GET /account/id-list/ 获取账户id列表（默认10条，包含基本信息）
+    GET /account/id-list/?page=<int:page>&page_size=<int:page_size> 获取账户id列表（默认10条，包含基本信息）
 
-    GET /account/detail/<int:id1>/<int:id2>/ 获取id1至id2之间的全部账户信息
+    GET /account/detail/?id1=<int:id1>&id2=<int:id2>&page=<int:page>&page_size=<int:page_size> 获取id1至id2之间的全部账户信息
 
     DELETE /account/user/<int:id>/ 删除账户
 

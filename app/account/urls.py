@@ -5,19 +5,19 @@ from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token, verify
 from app.account import views
 
 router = routers.SimpleRouter()
-router.register('user', views.RealUserViewSets)
-router.register('department', views.DepartmentViewSets)
+router.register('user', views.RealUserViewSets, base_name='user')
+router.register('department', views.DepartmentViewSets, base_name='department')
 urlpatterns = [
     path('', include(router.urls)),
 
     # 获取账户ID列表
-    path('id-list/', views.RealUserIdList.as_view()),
+    path('id-list/', views.RealUserIdList.as_view(), name='user-id-list'),
     # 获取id1至id2之间的全部账户信息
-    path('detail/<int:id1>/<int:id2>/', views.RealUserDetailId1AndId2List.as_view()),
+    path('some-user-detail/', views.RealUserSomeUserDetailIList.as_view(), name='some-user-detail'),
 
     # jwt
     # 登录获取token
-    path('login/', obtain_jwt_token),
+    path('login/', obtain_jwt_token, name='login'),
     # 刷新token
     path('token-refresh/', refresh_jwt_token),
     # 验证token
