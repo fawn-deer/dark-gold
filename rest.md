@@ -28,6 +28,8 @@
 
 ## 部门
 
+    GET /account/department/ 分页获取部门信息
+
     GET /account/department/<int:id>/ 获取部门信息
 
 

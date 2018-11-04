@@ -180,7 +180,7 @@ class DepartmentViewSets(viewsets.ModelViewSet):
     """
     部门视图集
     """
-    queryset = Department.objects.all()
+    queryset = Department.objects.all().order_by('id')
     pagination_class = CurrencyResultsSetPagination
 
     def get_permissions(self):

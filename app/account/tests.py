@@ -297,3 +297,68 @@ class RealUserTests(APITestCase):
         user = RealUser.objects.get(pk=5)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(user.is_active)
+
+
+class DepartmentTests(APITestCase):
+    """
+    部门测试
+    """
+    fixtures = ['account.json']
+
+    def test_get_department_list(self):
+        """
+        不同权限账户批量获取部门信息
+        """
+        base_url = reverse('department-list')
+        url_page_2 = base_url + '?page=2'
+        url_size_2 = base_url + '?page_size=2'
+        url_page_2_size_2 = base_url + '?page=2&page_size=2'
+        url_page_3_size_2 = base_url + '?page=3&page_size=2'
+
+        response = admin_client.get(base_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = admin_client.get(url_page_2)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = admin_client.get(url_size_2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = admin_client.get(url_page_2_size_2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = admin_client.get(url_page_3_size_2)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = user_client.get(base_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = user_client.get(url_page_2)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = user_client.get(url_size_2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = user_client.get(url_page_2_size_2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = user_client.get(url_page_3_size_2)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = not_login_client.get(base_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_department(self):
+        """
+        不同权限账户获取单部门信息
+        """
+        url = reverse('department-detail', args=[1])
+
+        response = admin_client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = user_client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = not_login_client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
