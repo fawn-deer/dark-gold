@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
-from app.account.models import RealUser
+from app.account.models import RealUser, Department
 
 admin_client = APIClient()
 user_client = APIClient()
@@ -118,6 +118,9 @@ class RealUserTests(APITestCase):
         update_id5_man = {'username': 'test4', 'sex': 'man'}
         update_id5_woman = {'username': 'test4', 'sex': 'woman'}
 
+        update_id3_department_2 = {'username': 'test2', 'department': 2}
+        update_id3_department_none = {'username': 'test2', 'department': ''}
+
         response = admin_client.put(url_id3, update_id3_man)
         self.assertEqual(response.data['sex'], 'man')
         response = admin_client.patch(url_id3, update_id3_woman)
@@ -135,8 +138,18 @@ class RealUserTests(APITestCase):
 
         response = user_client.put(url_id5, update_id5_man)
         self.assertEqual(response.data['sex'], 'man')
-        response = user_client.put(url_id5, update_id5_woman)
+        response = user_client.patch(url_id5, update_id5_woman)
         self.assertEqual(response.data['sex'], 'woman')
+
+        response = admin_client.patch(url_id3, update_id3_department_2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user = RealUser.objects.get(pk=3)
+        self.assertEqual(user.department.id, 2)
+
+        response = admin_client.patch(url_id3, update_id3_department_none)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user = RealUser.objects.get(pk=3)
+        self.assertEqual(user.department, None)
 
     def test_change_password(self):
         """
@@ -362,3 +375,113 @@ class DepartmentTests(APITestCase):
 
         response = not_login_client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_department(self):
+        """
+        创建部门
+        """
+        url = reverse('department-list')
+        department = {'name': 'test_create_department'}
+        department_more_param = {'name': 'test_create_department_more_param', 'test_param': 'test'}
+        department_haved = {'name': 'department3'}
+
+        response = user_client.post(url, department)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = not_login_client.post(url, department)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        response = admin_client.post(url, department)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = admin_client.post(url, department_more_param)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = admin_client.post(url, department_haved)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_department(self):
+        """
+        更新部门信息
+        """
+        url_2 = reverse('department-detail', args=[2])
+        url_3 = reverse('department-detail', args=[3])
+
+        department_2_name = {'name': 'test_change_2'}
+        department_2_name_patch = {'name': 'test_2_patch'}
+        department_2_director = {'director': 2}
+        department_3_name = {'name': 'test_change_3'}
+        department_3_director_4 = {'director': 4}
+        department_3_director_5 = {'director': 5}
+        department_3_director_6_put = {'name': 'test_change_3', 'director': 6}
+        department_3_director_7_put = {'name': 'test_change_3', 'director': 7}
+
+        response = user_client.put(url_2, department_2_name)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = not_login_client.put(url_2, department_2_name)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        response = admin_client.put(url_2, department_2_name)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        department = Department.objects.get(pk=2)
+        self.assertEqual(department.name, 'test_change_2')
+
+        response = admin_client.patch(url_2, department_2_name_patch)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        department = Department.objects.get(pk=2)
+        self.assertEqual(department.name, 'test_2_patch')
+
+        response = admin_client.put(url_2, department_2_director)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = admin_client.put(url_3, department_3_name)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = admin_client.put(url_3, department_3_director_4)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # error TODO:// 修正patch方法
+        # error start
+        # response = admin_client.patch(url_3, department_3_director_4, content_type='application/json')
+        # self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        #
+        # response = admin_client.patch(url_3, department_3_director_5)
+        # department = Department.objects.get(pk=3)
+        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # self.assertEqual(department.director.id, 5)
+        # erroe end
+
+        response = admin_client.put(url_3, department_3_director_6_put)
+        department = Department.objects.get(pk=3)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(department.director.id, 6)
+
+        # error
+        # response = admin_client.put(url_3, department_3_director_7_put)
+        # department = Department.objects.get(pk=3)
+        # self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # self.assertEqual(department.director.id, 6)
+
+    def test_delete_department(self):
+        """
+        删除部门
+        """
+        url_2 = reverse('department-detail', args=[2])
+        url_3 = reverse('department-detail', args=[3])
+
+        response = user_client.delete(url_2)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = not_login_client.delete(url_2)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        response = admin_client.delete(url_2)
+        users = RealUser.objects.filter(department=2)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(users), 0)
+
+        response = admin_client.delete(url_3)
+        users = RealUser.objects.filter(department=3)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(users), 0)

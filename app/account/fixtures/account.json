@@ -377,7 +377,7 @@
       "sex": "",
       "phone_number": null,
       "highest_education": "",
-      "department": null,
+      "department": 3,
       "entry_date": null,
       "leave_date": null,
       "groups": [],

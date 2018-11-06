@@ -71,7 +71,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
     """
 
     def validate(self, data):
-        if data['director'] and data['director'] not in [i for i in self.instance.department_name.all()]:
+        if data.get('director', None) and data['director'] not in [i for i in self.instance.department_name.all()]:
             raise serializers.ValidationError('部门主管必须属于该部门')
         return data
 

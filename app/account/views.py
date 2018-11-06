@@ -197,6 +197,9 @@ class DepartmentViewSets(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             serializer_class = DepartmentSerializer
             serializer_class.read_only = True
+        elif self.action in ['create']:
+            serializer_class = DepartmentSerializer
+            serializer_class.Meta.fields = ('name',)
         else:
             serializer_class = DepartmentSerializer
         return serializer_class

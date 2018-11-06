@@ -1,5 +1,4 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.db import models
 
 HIGHEST_EDUCATION = (
@@ -29,7 +28,7 @@ class Department(models.Model):
         verbose_name = '部门'
         verbose_name_plural = '部门'
 
-    name = models.CharField('''部门名称''', max_length=100, blank=False, null=False, db_index=True)
+    name = models.CharField('''部门名称''', max_length=100, unique=True, blank=False, null=False, db_index=True)
     '''部门名称'''
     director = models.ForeignKey('RealUser', verbose_name='部门主管', on_delete=models.SET_NULL, null=True, blank=True,
                                  related_name='director_user')
