@@ -50,6 +50,16 @@ class AuthTests(APITestCase):
         response = client.post(self.login_url, self.is_not_active_user)
         self.assertEqual(response.data, {"non_field_errors": ["无法使用提供的认证信息登录。"]})
 
+    def test_refresh_token(self):
+        """
+        测试刷新token
+        """
+        client = APIClient()
+        response = client.post(self.login_url, self.admin_user)
+
+        response = client.post(reverse('refresh-token'), response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class RealUserTests(APITestCase):
     """

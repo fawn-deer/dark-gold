@@ -19,7 +19,7 @@ urlpatterns = [
     # 登录获取token
     path('login/', obtain_jwt_token, name='login'),
     # 刷新token
-    path('token-refresh/', refresh_jwt_token),
+    path('token-refresh/', refresh_jwt_token, name='refresh-token'),
     # 验证token
     path('token-verify/', verify_jwt_token),
 ]
