@@ -120,7 +120,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'app.account.authentication.ExtendJSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
@@ -131,5 +131,9 @@ JWT_AUTH = {
     # token过期时间 一星期
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=1 * 60 * 60 * 24 * 7),
     # 原始token可刷新获得子孙token时间 三个月
-    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(seconds=1 * 60 * 60 * 24 * 30 * 3)
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(seconds=1 * 60 * 60 * 24 * 30 * 3),
+    # payload有效载荷生成函数
+    'JWT_PAYLOAD_HANDLER': 'app.account.utils.extend_jwt_payload_handler',
+    # 允许刷新令牌
+    'JWT_ALLOW_REFRESH': True,
 }

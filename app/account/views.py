@@ -1,5 +1,8 @@
+import datetime
+from calendar import timegm
+
 from django.db.models import Q
-from rest_framework import generics, mixins, viewsets, status, serializers
+from rest_framework import generics, mixins, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
@@ -40,7 +43,7 @@ class RealUserViewSets(mixins.RetrieveModelMixin,
         # 非管理员，删除部分字段，设置只读字段
         if self.action not in ['create', 'change-password']:
             if not self.request.user or not self.request.user.is_superuser:
-                serializer_class.Meta.exclude = ('password', 'is_superuser', 'is_staff')
+                serializer_class.Meta.exclude = ('password', 'is_superuser', 'is_staff', 'jwt_deadline')
                 serializer_class.Meta.read_only_fields = ('is_active',)
 
         kwargs['context'] = self.get_serializer_context()
@@ -101,9 +104,14 @@ class RealUserViewSets(mixins.RetrieveModelMixin,
             serializer = RealUserChangePasswordSerializer(data=request.data)
             if serializer.is_valid():
                 user.set_password(request.data['password'])
+                # 设置过期时间修改后3秒
+                user.jwt_deadline = timegm(
+                    (
+                            datetime.datetime.utcnow() + datetime.timedelta(seconds=3)
+                     ).utctimetuple()
+                )
                 user.save()
-                # TODO:// 更改密码后token应该失效，考虑使用Redis缓存是否更改密码，登录获取或刷新token时先验证
-                return Response({'status': 'password set'})
+                return Response({'status': 'password set, please login after 3 seconds'})
             else:
                 return Response(serializer.errors,
                                 status=status.HTTP_400_BAD_REQUEST)

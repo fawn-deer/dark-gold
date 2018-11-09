@@ -25,7 +25,7 @@ class RealUserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RealUser
-        exclude = ('password',)
+        exclude = ('password', 'jwt_deadline')
 
 
 class RealUserCreateSerializer(serializers.ModelSerializer):

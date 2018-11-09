@@ -58,6 +58,8 @@ class RealUser(AbstractUser):
     '''入职日期'''
     leave_date = models.DateField('''离职日期''', default=None, null=True, blank=True)
     '''离职日期'''
+    jwt_deadline = models.BigIntegerField('''JWT过期时间''', default=0, null=True, blank=True)
+    '''JWT过期时间，默认不过期，更改密码时改为当前时间'''
 
     def __str__(self):
         return ' '.join([

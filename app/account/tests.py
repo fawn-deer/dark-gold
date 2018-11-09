@@ -1,3 +1,5 @@
+import time
+
 from django.contrib.auth import authenticate
 from django.urls import reverse
 from rest_framework import status
@@ -167,9 +169,12 @@ class RealUserTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(authenticate(username='test5', password='123aaa111'))
 
+        # 休眠3秒，等待可以正常使用新密码登录
+        time.sleep(3)
+
         # 更改密码后使用原token获取当前账户信息
-        # response = client.get(reverse('user-detail', args=[6]))
-        # self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = client.get(reverse('user-detail', args=[6]))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # 重新登录
         response = client.post(reverse('login'), {'username': 'test5', 'password': '123aaa111'})
